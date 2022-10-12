@@ -23,22 +23,7 @@ public abstract class StringServer implements Runnable
 			for	(;;)
 			{
 				Socket socket = listener.accept();
-
-				new Thread(() ->
-				{
-					try
-					{
-						DataInput in = new DataInputStream(socket.getInputStream());
-						byte[] bytes = new byte[in.readInt()];
-						in.readFully(bytes);
-						String response = processRequest(new String(bytes));
-						DataOutput out = new DataOutputStream(socket.getOutputStream());
-						out.writeInt(response.length());
-						out.writeBytes(response);
-						socket.close();
-					}
-					catch (Exception e) { }
-				}).start();
+				new Thread(() -> handleSocket(socket)).start();
 			}
 		}
 		catch (Exception e) { }
@@ -49,6 +34,31 @@ public abstract class StringServer implements Runnable
 		try
 		{
 			listener.close();
+		}
+		catch (Exception e) { }
+	}
+
+	protected void handleSocket(Socket socket)
+	{
+		if (socket == null)
+			return;
+
+		try
+		{
+			DataInput in = new DataInputStream(socket.getInputStream());
+			DataOutput out = new DataOutputStream(socket.getOutputStream());
+
+			for (;;)
+			{
+				if (socket.isClosed())
+					break;
+
+				byte[] bytes = new byte[in.readInt()];
+				in.readFully(bytes);
+				String response = processRequest(new String(bytes));
+				out.writeInt(response.length());
+				out.writeBytes(response);
+			}
 		}
 		catch (Exception e) { }
 	}

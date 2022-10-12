@@ -6,11 +6,19 @@ public class StringClient
 {
 	protected final String serverAddress;
 	protected final int serverPort;
+	private final Socket socket;
+	private final DataOutput out;
+	private final DataInput in;
 
-	public StringClient(String serverAddress, int serverPort)
+	public StringClient(String serverAddress, int serverPort) throws
+		UnknownHostException,
+		IOException
 	{
 		this.serverAddress = serverAddress;
 		this.serverPort = serverPort;
+		this.socket = new Socket(getServerAddress(), getServerPort());
+		out = new DataOutputStream(socket.getOutputStream());
+		in = new DataInputStream(socket.getInputStream());
 	}
 
 	public String getServerAddress()
@@ -28,16 +36,12 @@ public class StringClient
 		try
 		{
 			if (string == null)
-				string = "";
+				return "";
 
-			Socket socket = new Socket(getServerAddress(), getServerPort());
-			DataOutput out = new DataOutputStream(socket.getOutputStream());
 			out.writeInt(string.length());
 			out.writeBytes(string);
-			DataInput in = new DataInputStream(socket.getInputStream());
 			byte[] bytes = new byte[in.readInt()];
 			in.readFully(bytes);
-			socket.close();
 			return new String(bytes);
 		}
 		catch (Exception e)

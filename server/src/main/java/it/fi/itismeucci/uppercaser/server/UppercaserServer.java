@@ -11,6 +11,6 @@ public class UppercaserServer extends StringServer
 	@Override
 	public String processRequest(String string)
 	{
-		return string.toUpperCase();
+		return string == null ? "" : string.toUpperCase();
 	}
 }
