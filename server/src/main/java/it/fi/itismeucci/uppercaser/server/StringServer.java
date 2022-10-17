@@ -105,6 +105,9 @@ public abstract class StringServer implements Runnable
 	}
 
 	public abstract String processRequest(String string);
+
+	// If returns false, then close the socket.
 	public abstract boolean requestHandled(String response);
+
 	public abstract void socketClosed();
 }

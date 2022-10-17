@@ -7,8 +7,21 @@ public class App
 
 	public static void main(String[] args) throws Exception
 	{
-		StringClient sc = new StringClient("127.0.0.1", 60005);
 		System.out.println("Uppercaser");
+		StringClient sc = null;
+
+		while (sc == null)
+		{
+			try
+			{
+				sc = new StringClient("127.0.0.1", 60005);
+			}
+			catch (Exception e)
+			{
+				System.out.println("Server unreachable. Retrying...");
+				Thread.sleep(5000);
+			}
+		}
 
 		for (;;)
 		{
@@ -18,8 +31,12 @@ public class App
 			if (string.equals("FINE"))
 				break;
 
-			string = sc.send(string);
-			System.out.println(string == null ? "Communication error." : string);
+			String response = sc.send(string);
+
+			if (string.equals("SPEGNI"))
+				break;
+
+			System.out.println(response == null ? "Communication error." : response);
 		}
 	}
 }

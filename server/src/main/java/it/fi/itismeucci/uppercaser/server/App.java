@@ -10,12 +10,19 @@ public class App
 	{
 		System.out.println("Uppercaser Server");
 
-		UppercaserServer us = new UppercaserServer(PORT, () ->
+		try
 		{
-			System.out.println("Server stopped by a client");
-		});
+			UppercaserServer us = new UppercaserServer(PORT, () ->
+			{
+				System.out.println("Server stopped by a client");
+			});
 
-		new Thread(us).start();
-		System.out.println("Server started on port " + us.getPort());
+			new Thread(us).start();
+			System.out.println("Server started on port " + us.getPort());
+		}
+		catch (Exception e)
+		{
+			System.out.println("Unable to create server");
+		}
 	}
 }
