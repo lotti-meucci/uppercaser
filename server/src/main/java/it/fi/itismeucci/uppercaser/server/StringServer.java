@@ -1,14 +1,23 @@
 package it.fi.itismeucci.uppercaser.server;
+import java.util.*;
 import java.io.*;
 import java.net.*;
 
 public abstract class StringServer implements Runnable
 {
 	private final ServerSocket listener;
+	private final ArrayList<Socket> sockets = new ArrayList<>();
+	protected final Runnable serverStopped;
+
+	public StringServer(int port, Runnable serverStopped) throws IOException
+	{
+		listener = new ServerSocket(port);
+		this.serverStopped = serverStopped;
+	}
 
 	public StringServer(int port) throws IOException
 	{
-		listener = new ServerSocket(port);
+		this(port, null);
 	}
 
 	public int getPort()
@@ -16,17 +25,36 @@ public abstract class StringServer implements Runnable
 		return listener.getLocalPort();
 	}
 
+	public boolean isRunning()
+	{
+		return !listener.isClosed();
+	}
+
 	public void run()
 	{
-		try
+		while (isRunning())
 		{
-			for	(;;)
+			try
 			{
 				Socket socket = listener.accept();
-				new Thread(() -> handleSocket(socket)).start();
+				sockets.add(socket);
+
+				new Thread(() ->
+				{
+					handleSocket(socket);
+					sockets.remove(socket);
+					socketClosed();
+				}).start();
+			}
+			catch (Exception e)
+			{
+				if (!isRunning())
+					break;
 			}
 		}
-		catch (Exception e) { }
+
+		if (serverStopped != null)
+			serverStopped.run();
 	}
 
 	public void stop()
@@ -36,6 +64,16 @@ public abstract class StringServer implements Runnable
 			listener.close();
 		}
 		catch (Exception e) { }
+
+		for (Socket socket : sockets)
+		{
+			try
+			{
+				socket.close();
+			} catch (Exception e) { }
+		}
+
+		sockets.clear();
 	}
 
 	protected void handleSocket(Socket socket)
@@ -58,10 +96,15 @@ public abstract class StringServer implements Runnable
 				String response = processRequest(new String(bytes));
 				out.writeInt(response.length());
 				out.writeBytes(response);
+
+				if (!requestHandled(response))
+					break;
 			}
 		}
 		catch (Exception e) { }
 	}
 
 	public abstract String processRequest(String string);
+	public abstract boolean requestHandled(String response);
+	public abstract void socketClosed();
 }

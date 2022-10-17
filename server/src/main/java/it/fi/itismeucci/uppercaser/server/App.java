@@ -9,12 +9,13 @@ public class App
 	public static void main(String[] args) throws Exception
 	{
 		System.out.println("Uppercaser Server");
-		UppercaserServer us = new UppercaserServer(PORT);
+
+		UppercaserServer us = new UppercaserServer(PORT, () ->
+		{
+			System.out.println("Server stopped by a client");
+		});
+
 		new Thread(us).start();
 		System.out.println("Server started on port " + us.getPort());
-		System.out.print("Stop? ");
-		IN.nextLine();
-		us.stop();
-		System.out.println("Server stopped");
 	}
 }
